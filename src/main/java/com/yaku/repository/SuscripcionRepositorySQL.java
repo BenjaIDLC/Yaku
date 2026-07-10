@@ -1,6 +1,7 @@
 package com.yaku.repository;
 
 import com.yaku.db.ConexionDB;
+import com.yaku.model.EstadoSuscripcion;
 import com.yaku.model.Suscripcion;
 
 import java.sql.*;
@@ -25,7 +26,7 @@ public class SuscripcionRepositorySQL implements ISuscripcionRepository {
             ps.setString(1, s.getEstudianteId());
             ps.setInt(2, s.getClasesRestantes());
             ps.setDate(3, Date.valueOf(s.getFechaInicio()));
-            ps.setString(4, s.getEstado());
+            ps.setString(4, s.getEstado().name());
             ps.executeUpdate();
             try (ResultSet keys = ps.getGeneratedKeys()) {
                 if (keys.next()) {
@@ -69,7 +70,7 @@ public class SuscripcionRepositorySQL implements ISuscripcionRepository {
         String sql = "UPDATE suscripciones SET clases_restantes = ?, estado = ? WHERE id = ?";
         try (PreparedStatement ps = conexion().prepareStatement(sql)) {
             ps.setInt(1, s.getClasesRestantes());
-            ps.setString(2, s.getEstado());
+            ps.setString(2, s.getEstado().name());
             ps.setInt(3, s.getId());
             ps.executeUpdate();
         } catch (SQLException e) {
@@ -83,7 +84,7 @@ public class SuscripcionRepositorySQL implements ISuscripcionRepository {
                 rs.getString("estudiante_id"),
                 rs.getInt("clases_restantes"),
                 rs.getDate("fecha_inicio").toLocalDate(),
-                rs.getString("estado")
+                EstadoSuscripcion.valueOf(rs.getString("estado"))
         );
     }
 }

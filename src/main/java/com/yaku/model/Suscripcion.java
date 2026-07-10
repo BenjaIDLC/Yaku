@@ -14,10 +14,10 @@ public class Suscripcion {
     private String estudianteId;
     private int clasesRestantes;
     private LocalDate fechaInicio;
-    private String estado;
+    private EstadoSuscripcion estado;
 
     public Suscripcion(int id, String estudianteId, int clasesRestantes,
-                       LocalDate fechaInicio, String estado) {
+                       LocalDate fechaInicio, EstadoSuscripcion estado) {
         this.id = id;
         this.estudianteId = estudianteId;
         this.clasesRestantes = clasesRestantes;
@@ -37,8 +37,8 @@ public class Suscripcion {
     public LocalDate getFechaInicio() { return fechaInicio; }
     public void setFechaInicio(LocalDate fechaInicio) { this.fechaInicio = fechaInicio; }
 
-    public String getEstado() { return estado; }
-    public void setEstado(String estado) { this.estado = estado; }
+    public EstadoSuscripcion getEstado() { return estado; }
+    public void setEstado(EstadoSuscripcion estado) { this.estado = estado; }
 
     @Override
     public String toString() {

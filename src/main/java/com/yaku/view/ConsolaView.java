@@ -1,5 +1,6 @@
 package com.yaku.view;
 
+import com.yaku.model.EstadoSuscripcion;
 import com.yaku.model.Estudiante;
 import com.yaku.model.Paquete;
 import com.yaku.model.RegistroAsistencia;
@@ -11,6 +12,7 @@ import com.yaku.service.SuscripcionService;
 
 import java.util.List;
 import java.util.Scanner;
+import java.util.Set;
 
 public class ConsolaView {
 
@@ -38,7 +40,7 @@ public class ConsolaView {
         } while (opcion != 0);
     }
 
-    private static final int MENU_ANCHO = 30;
+    private static final int MENU_ANCHO = 34;
 
     private void mostrarMenu() {
         String borde = "═".repeat(MENU_ANCHO);
@@ -47,15 +49,16 @@ public class ConsolaView {
         System.out.println("╠" + borde + "╣");
         itemMenu(1, "Registrar estudiante");
         itemMenu(2, "Buscar estudiante por ID");
-        itemMenu(3, "Listar estudiantes");
-        itemMenu(4, "Editar estudiante");
-        itemMenu(5, "Eliminar estudiante");
-        itemMenu(6, "Abonar clases (paquete)");
-        itemMenu(7, "Ver suscripcion");
-        itemMenu(8, "Cancelar suscripcion");
-        itemMenu(9, "Registrar asistencia");
-        itemMenu(10, "Asistencias del dia");
-        itemMenu(11, "Reporte de saldo bajo");
+        itemMenu(3, "Buscar estudiante por nombre");
+        itemMenu(4, "Listar estudiantes");
+        itemMenu(5, "Editar estudiante");
+        itemMenu(6, "Eliminar estudiante");
+        itemMenu(7, "Abonar clases (paquete)");
+        itemMenu(8, "Ver suscripcion");
+        itemMenu(9, "Cancelar suscripcion");
+        itemMenu(10, "Registrar asistencia");
+        itemMenu(11, "Asistencias del dia");
+        itemMenu(12, "Reporte de saldo bajo");
         itemMenu(0, "Salir");
         System.out.println("╚" + borde + "╝");
     }
@@ -68,15 +71,16 @@ public class ConsolaView {
         switch (opcion) {
             case 1 -> registrarEstudiante();
             case 2 -> buscarEstudiante();
-            case 3 -> listarEstudiantes();
-            case 4 -> editarEstudiante();
-            case 5 -> eliminarEstudiante();
-            case 6 -> abonarClases();
-            case 7 -> verSuscripcion();
-            case 8 -> cancelarSuscripcion();
-            case 9 -> registrarAsistencia();
-            case 10 -> verAsistenciasDelDia();
-            case 11 -> reporteSaldoBajo();
+            case 3 -> buscarEstudiantePorNombre();
+            case 4 -> listarEstudiantes();
+            case 5 -> editarEstudiante();
+            case 6 -> eliminarEstudiante();
+            case 7 -> abonarClases();
+            case 8 -> verSuscripcion();
+            case 9 -> cancelarSuscripcion();
+            case 10 -> registrarAsistencia();
+            case 11 -> verAsistenciasDelDia();
+            case 12 -> reporteSaldoBajo();
             case 0 -> System.out.println("Saliendo del sistema. ¡Hasta luego!");
             default -> System.out.println("Opcion no valida. Intente nuevamente.");
         }
@@ -104,6 +108,27 @@ public class ConsolaView {
                 System.out.println(e);
             } else {
                 System.out.println("No se encontro ningun estudiante con ID: " + id);
+            }
+        } catch (RepositorioException ex) {
+            System.out.println("Error al buscar estudiante: " + ex.getMessage());
+        }
+    }
+
+    private void buscarEstudiantePorNombre() {
+        System.out.println("--- Buscar estudiante por nombre ---");
+        System.out.println("Se busca por apellido (o apellido y nombre), desde el inicio.");
+        String texto = leerTexto("Texto a buscar");
+        if (texto.isBlank()) {
+            System.out.println("Debe ingresar al menos una letra.");
+            return;
+        }
+        try {
+            List<Estudiante> resultados = estudianteService.buscarPorNombre(texto);
+            if (resultados.isEmpty()) {
+                System.out.println("No se encontraron estudiantes que coincidan con: " + texto);
+            } else {
+                resultados.forEach(System.out::println);
+                System.out.println("Total: " + resultados.size() + " coincidencia(s).");
             }
         } catch (RepositorioException ex) {
             System.out.println("Error al buscar estudiante: " + ex.getMessage());
@@ -211,6 +236,12 @@ public class ConsolaView {
             Suscripcion s = suscripcionService.obtenerSuscripcion(id);
             if (s != null) {
                 System.out.println(s);
+                Set<EstadoSuscripcion> siguientes = suscripcionService.siguientesEstados(s.getEstado());
+                if (siguientes.isEmpty()) {
+                    System.out.println("Puede pasar a: (ningun estado)");
+                } else {
+                    System.out.println("Puede pasar a: " + siguientes);
+                }
             } else {
                 System.out.println("El estudiante no tiene suscripcion registrada.");
             }
