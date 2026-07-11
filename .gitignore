@@ -34,3 +34,6 @@ target/
 
 ### Yaku — base de datos embebida H2 (datos locales, no versionar) ###
 data/
+
+### Yaku — notas miscelaneas para el informe (no versionar) ###
+notas/
