@@ -85,6 +85,25 @@ public class EstudianteService {
     }
 
     /**
+     * Vuelve a dar de alta un estudiante que fue eliminado, con su mismo id y
+     * datos. Uso interno del "deshacer" de una eliminacion; no aplica reglas.
+     */
+    public void restaurar(Estudiante e) {
+        repositorio.guardar(e);
+        indicePorNombre.insertar(e);
+    }
+
+    /**
+     * Quita un estudiante recien registrado sin validar reglas de negocio.
+     * Uso interno del "deshacer" de un registro (revierte al estado previo,
+     * en el que el estudiante no existia).
+     */
+    public void descartar(Estudiante e) {
+        repositorio.eliminar(e.getId());
+        indicePorNombre.eliminar(claveNombre(e));
+    }
+
+    /**
      * Busca estudiantes cuyo "apellido nombre" empiece por el texto dado,
      * usando el arbol binario de busqueda. Devuelve los resultados ya ordenados.
      */

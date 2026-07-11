@@ -7,7 +7,9 @@ import com.yaku.model.RegistroAsistencia;
 import com.yaku.model.Suscripcion;
 import com.yaku.repository.RepositorioException;
 import com.yaku.service.AsistenciaService;
+import com.yaku.service.Comando;
 import com.yaku.service.EstudianteService;
+import com.yaku.service.GestorDeshacer;
 import com.yaku.service.SuscripcionService;
 
 import java.util.List;
@@ -20,13 +22,16 @@ public class ConsolaView {
     private final EstudianteService estudianteService;
     private final SuscripcionService suscripcionService;
     private final AsistenciaService asistenciaService;
+    private final GestorDeshacer gestorDeshacer;
 
     public ConsolaView(EstudianteService estudianteService,
                        SuscripcionService suscripcionService,
-                       AsistenciaService asistenciaService) {
+                       AsistenciaService asistenciaService,
+                       GestorDeshacer gestorDeshacer) {
         this.estudianteService = estudianteService;
         this.suscripcionService = suscripcionService;
         this.asistenciaService = asistenciaService;
+        this.gestorDeshacer = gestorDeshacer;
     }
 
     public void iniciar() {
@@ -59,12 +64,19 @@ public class ConsolaView {
         itemMenu(10, "Registrar asistencia");
         itemMenu(11, "Asistencias del dia");
         itemMenu(12, "Reporte de saldo bajo");
+        itemMenu(13, rotuloDeshacer());
         itemMenu(0, "Salir");
         System.out.println("╚" + borde + "╝");
     }
 
     private void itemMenu(int numero, String texto) {
         System.out.printf("║%-" + MENU_ANCHO + "s║%n", String.format(" %2d. %s", numero, texto));
+    }
+
+    /** Rotulo de la opcion 13: muestra que accion se desharia, si la hay. */
+    private String rotuloDeshacer() {
+        String pendiente = gestorDeshacer.descripcionPendiente();
+        return pendiente == null ? "Deshacer ultima accion" : "Deshacer: " + pendiente;
     }
 
     private void manejarOpcion(int opcion) {
@@ -81,6 +93,7 @@ public class ConsolaView {
             case 10 -> registrarAsistencia();
             case 11 -> verAsistenciasDelDia();
             case 12 -> reporteSaldoBajo();
+            case 13 -> deshacerUltimaAccion();
             case 0 -> System.out.println("Saliendo del sistema. ¡Hasta luego!");
             default -> System.out.println("Opcion no valida. Intente nuevamente.");
         }
@@ -94,6 +107,9 @@ public class ConsolaView {
         try {
             Estudiante e = estudianteService.registrar(nombre, apellido, telefono);
             System.out.println("Estudiante registrado exitosamente con ID: " + e.getId());
+            gestorDeshacer.registrar(new Comando(
+                    "Registro de " + e.getId(),
+                    () -> estudianteService.descartar(e)));
         } catch (RepositorioException ex) {
             System.out.println("Error al registrar estudiante: " + ex.getMessage());
         }
@@ -161,14 +177,21 @@ public class ConsolaView {
             }
             System.out.println("Estudiante actual: " + actual);
             System.out.println("Deje un campo en blanco para mantener el valor actual.");
+            // Se guardan los valores previos para poder revertir la edicion.
+            String nombreViejo = actual.getNombre();
+            String apellidoViejo = actual.getApellido();
+            String telefonoViejo = actual.getTelefono();
             String nombre = leerTexto("Nuevo nombre");
             String apellido = leerTexto("Nuevo apellido");
             String telefono = leerTexto("Nuevo telefono");
             estudianteService.editar(id,
-                    nombre.isBlank() ? actual.getNombre() : nombre,
-                    apellido.isBlank() ? actual.getApellido() : apellido,
-                    telefono.isBlank() ? actual.getTelefono() : telefono);
+                    nombre.isBlank() ? nombreViejo : nombre,
+                    apellido.isBlank() ? apellidoViejo : apellido,
+                    telefono.isBlank() ? telefonoViejo : telefono);
             System.out.println("Estudiante actualizado correctamente.");
+            gestorDeshacer.registrar(new Comando(
+                    "Edicion de " + id,
+                    () -> estudianteService.editar(id, nombreViejo, apellidoViejo, telefonoViejo)));
         } catch (RepositorioException e) {
             System.out.println("Error al editar estudiante: " + e.getMessage());
         }
@@ -178,13 +201,34 @@ public class ConsolaView {
         System.out.println("--- Eliminar estudiante ---");
         String id = leerTexto("ID del estudiante").toUpperCase();
         try {
+            // Se captura antes de eliminar, para poder restaurarlo si se deshace.
+            Estudiante aEliminar = estudianteService.buscarPorId(id);
             switch (estudianteService.eliminar(id)) {
                 case NO_EXISTE -> System.out.println("No se encontro ningun estudiante con ID: " + id);
                 case TIENE_SUSCRIPCION_ACTIVA -> System.out.println("No se puede eliminar: el estudiante tiene una suscripcion ACTIVA. Cancelela primero.");
-                case ELIMINADO -> System.out.println("Estudiante eliminado correctamente.");
+                case ELIMINADO -> {
+                    System.out.println("Estudiante eliminado correctamente.");
+                    gestorDeshacer.registrar(new Comando(
+                            "Eliminacion de " + id,
+                            () -> estudianteService.restaurar(aEliminar)));
+                }
             }
         } catch (RepositorioException e) {
             System.out.println("Error al eliminar estudiante: " + e.getMessage());
+        }
+    }
+
+    private void deshacerUltimaAccion() {
+        System.out.println("--- Deshacer ultima accion ---");
+        if (!gestorDeshacer.hayAcciones()) {
+            System.out.println("No hay ninguna accion para deshacer.");
+            return;
+        }
+        try {
+            Comando deshecho = gestorDeshacer.deshacer();
+            System.out.println("Accion deshecha: " + deshecho.descripcion());
+        } catch (RepositorioException e) {
+            System.out.println("No se pudo deshacer la accion: " + e.getMessage());
         }
     }
 

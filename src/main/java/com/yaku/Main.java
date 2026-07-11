@@ -4,6 +4,7 @@ import com.yaku.db.ConexionDB;
 import com.yaku.repository.*;
 import com.yaku.service.AsistenciaService;
 import com.yaku.service.EstudianteService;
+import com.yaku.service.GestorDeshacer;
 import com.yaku.service.SuscripcionService;
 import com.yaku.view.ConsolaView;
 
@@ -36,7 +37,11 @@ public class Main {
         EstudianteService estudianteService = new EstudianteService(estudianteRepo, suscripcionService);
         AsistenciaService asistenciaService = new AsistenciaService(asistenciaRepo, suscripcionService);
 
-        ConsolaView vista = new ConsolaView(estudianteService, suscripcionService, asistenciaService);
+        // Historial de "deshacer" (pila de comandos), compartido por la vista.
+        GestorDeshacer gestorDeshacer = new GestorDeshacer();
+
+        ConsolaView vista = new ConsolaView(estudianteService, suscripcionService,
+                asistenciaService, gestorDeshacer);
         vista.iniciar();
     }
 }
