@@ -69,7 +69,9 @@ public class AppFX extends Application {
         mostrarDashboard();
 
         stage.setTitle("Yaku — Sistema de gestion");
+        // 900x600 es el tamaño al que vuelve si el usuario "des-maximiza".
         stage.setScene(new Scene(raiz, 900, 600));
+        stage.setMaximized(true);
         stage.show();
     }
 
