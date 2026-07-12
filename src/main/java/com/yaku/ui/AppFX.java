@@ -16,61 +16,61 @@ import com.yaku.service.GestorDeshacer;
 import com.yaku.service.SuscripcionService;
 
 import javafx.application.Application;
-import javafx.geometry.Insets;
-import javafx.geometry.Pos;
 import javafx.scene.Node;
 import javafx.scene.Scene;
 import javafx.scene.control.Button;
 import javafx.scene.control.Label;
-import javafx.scene.layout.BorderPane;
-import javafx.scene.layout.ColumnConstraints;
-import javafx.scene.layout.GridPane;
+import javafx.scene.control.ScrollPane;
 import javafx.scene.layout.HBox;
+import javafx.scene.layout.BorderPane;
 import javafx.scene.layout.Priority;
-import javafx.scene.layout.RowConstraints;
+import javafx.scene.layout.Region;
 import javafx.scene.layout.StackPane;
-import javafx.scene.layout.VBox;
 import javafx.stage.Stage;
 
 import java.sql.SQLException;
+import java.time.LocalDate;
+import java.time.format.DateTimeFormatter;
+import java.util.LinkedHashMap;
+import java.util.Locale;
+import java.util.Map;
 
 /**
  * Punto de entrada de la interfaz grafica (JavaFX).
  *
- * Es el composition root de la GUI: elige repositorios (H2 o memoria) igual que
- * {@link com.yaku.Main} y arma los mismos servicios, que reutiliza tal cual —la
- * GUI es solo una capa de presentacion distinta a la consola.
+ * Composition root de la GUI: elige repositorios (H2 o memoria) igual que
+ * {@link com.yaku.Main} y arma los mismos servicios, que reutiliza tal cual.
  *
- * Navegacion: un dashboard de modulos que, al hacer clic, muestra la vista del
- * modulo en el centro. La barra superior tiene "Volver" para regresar al inicio.
+ * Navegacion (rediseno): barra superior fija con pestanas; el contenido de la
+ * pestana activa se muestra en el area central desplazable. El look & feel vive
+ * en {@code /theme.css}.
  */
 public class AppFX extends Application {
 
     private EstudianteService estudianteService;
+    private SuscripcionService suscripcionService;
+    private AsistenciaService asistenciaService;
     private GestorDeshacer gestorDeshacer;
 
     private final BorderPane raiz = new BorderPane();
-    private final Button volver = new Button("← Volver");
-    private final Label tituloVista = new Label();
+    private final ScrollPane areaContenido = new ScrollPane();
+    private final Map<String, Button> botonesNav = new LinkedHashMap<>();
 
     @Override
     public void start(Stage stage) {
         construirServicios();
 
-        volver.setOnAction(e -> mostrarDashboard());
-        HBox barra = new HBox(12, volver, tituloVista);
-        barra.setAlignment(Pos.CENTER_LEFT);
-        barra.setPadding(new Insets(12, 16, 12, 16));
-        barra.setStyle("-fx-background-color:#263238;");
-        volver.setStyle("-fx-background-color:#455a64; -fx-text-fill:white;");
-        tituloVista.setStyle("-fx-text-fill:white; -fx-font-size:16; -fx-font-weight:bold;");
-        raiz.setTop(barra);
+        raiz.setTop(construirHeader());
+        areaContenido.setFitToWidth(true);
+        areaContenido.getStyleClass().add("content-scroll");
+        raiz.setCenter(areaContenido);
 
-        mostrarDashboard();
+        seleccionar("Inicio");
 
+        Scene escena = new Scene(raiz, 1200, 760);
+        escena.getStylesheets().add(getClass().getResource("/theme.css").toExternalForm());
         stage.setTitle("Yaku — Sistema de gestion");
-        // 900x600 es el tamaño al que vuelve si el usuario "des-maximiza".
-        stage.setScene(new Scene(raiz, 900, 600));
+        stage.setScene(escena);
         stage.setMaximized(true);
         stage.show();
     }
@@ -90,93 +90,89 @@ public class AppFX extends Application {
             suscripcionRepo = new SuscripcionRepositoryMemoria();
             asistenciaRepo = new AsistenciaRepositoryMemoria();
         }
-        SuscripcionService suscripcionService = new SuscripcionService(suscripcionRepo);
+        suscripcionService = new SuscripcionService(suscripcionRepo);
         estudianteService = new EstudianteService(estudianteRepo, suscripcionService);
-        // Los servicios de suscripcion/asistencia quedan listos para futuros modulos.
-        new AsistenciaService(asistenciaRepo, suscripcionService);
+        asistenciaService = new AsistenciaService(asistenciaRepo, suscripcionService);
         gestorDeshacer = new GestorDeshacer();
+    }
+
+    // ---- Barra superior ----------------------------------------------------
+
+    private HBox construirHeader() {
+        HBox header = new HBox();
+        header.getStyleClass().add("header");
+
+        Label marca = new Label("Yaku");
+        marca.getStyleClass().add("brand");
+
+        HBox nav = new HBox(3);
+        for (String pantalla : new String[]{
+                "Inicio", "Estudiantes", "Suscripciones", "Asistencias", "Reportes", "Historial"}) {
+            Button b = new Button(pantalla);
+            b.getStyleClass().add("nav-button");
+            b.setOnAction(e -> seleccionar(pantalla));
+            botonesNav.put(pantalla, b);
+            nav.getChildren().add(b);
+        }
+
+        Region espaciador = new Region();
+        HBox.setHgrow(espaciador, Priority.ALWAYS);
+
+        Label fecha = new Label(fechaHoy());
+        fecha.getStyleClass().addAll("header-date", "mono");
+
+        Label avatar = new Label("RA");
+        avatar.getStyleClass().add("avatar");
+
+        HBox derecha = new HBox(14, fecha, avatar);
+        derecha.setStyle("-fx-alignment:center-right;");
+
+        header.getChildren().addAll(marca, nav, espaciador, derecha);
+        return header;
+    }
+
+    private String fechaHoy() {
+        return LocalDate.now()
+                .format(DateTimeFormatter.ofPattern("EEE d MMM yyyy", new Locale("es", "PE")));
     }
 
     // ---- Navegacion --------------------------------------------------------
 
-    private void mostrarDashboard() {
-        volver.setVisible(false);
-        tituloVista.setText("Inicio");
-        raiz.setCenter(construirDashboard());
+    /** Activa una pestana: resalta su boton y muestra su contenido. */
+    private void seleccionar(String pantalla) {
+        botonesNav.forEach((nombre, boton) -> {
+            boton.getStyleClass().remove("nav-button-active");
+            if (nombre.equals(pantalla)) {
+                boton.getStyleClass().add("nav-button-active");
+            }
+        });
+        areaContenido.setContent(envolver(contenidoDe(pantalla)));
     }
 
-    private void navegar(String titulo, Node contenido) {
-        volver.setVisible(true);
-        tituloVista.setText(titulo);
-        raiz.setCenter(contenido);
+    /** Devuelve la vista de cada pantalla (placeholder para las aun no rediseñadas). */
+    private Node contenidoDe(String pantalla) {
+        return switch (pantalla) {
+            case "Estudiantes" -> new EstudiantesVista(estudianteService, gestorDeshacer);
+            case "Historial" -> new HistorialVista(gestorDeshacer);
+            default -> placeholder(pantalla);
+        };
     }
 
-    // ---- Dashboard ---------------------------------------------------------
-
-    private GridPane construirDashboard() {
-        GridPane grilla = new GridPane();
-        grilla.setHgap(16);
-        grilla.setVgap(16);
-        grilla.setPadding(new Insets(20));
-
-        // 6 columnas iguales: fila de arriba = 3 tiles (span 2), abajo = 2 tiles (span 3).
-        for (int i = 0; i < 6; i++) {
-            ColumnConstraints cc = new ColumnConstraints();
-            cc.setPercentWidth(100.0 / 6);
-            cc.setHgrow(Priority.ALWAYS);
-            grilla.getColumnConstraints().add(cc);
-        }
-        RowConstraints filaArriba = new RowConstraints();
-        filaArriba.setPercentHeight(45);
-        filaArriba.setVgrow(Priority.ALWAYS);
-        RowConstraints filaAbajo = new RowConstraints();
-        filaAbajo.setPercentHeight(55);
-        filaAbajo.setVgrow(Priority.ALWAYS);
-        grilla.getRowConstraints().addAll(filaArriba, filaAbajo);
-
-        // Fila 0: los tres modulos operativos.
-        grilla.add(tile("Estudiantes", "Alta, busqueda, edicion", "#00695c",
-                () -> navegar("Estudiantes", new EstudiantesVista(estudianteService, gestorDeshacer))), 0, 0, 2, 1);
-        grilla.add(tile("Suscripciones", "Paquetes de clases y estados", "#5e35b1",
-                () -> navegar("Suscripciones", placeholder("Suscripciones"))), 2, 0, 2, 1);
-        grilla.add(tile("Asistencias", "Registro diario", "#0277bd",
-                () -> navegar("Asistencias", placeholder("Asistencias"))), 4, 0, 2, 1);
-
-        // Fila 1: los dos grandes (50/50).
-        grilla.add(tile("Reportes", "Saldo bajo y resumenes", "#ef6c00",
-                () -> navegar("Reportes", placeholder("Reportes"))), 0, 1, 3, 1);
-        grilla.add(tile("Historial", "Deshacer acciones (Pila)", "#c62828",
-                () -> navegar("Historial", new HistorialVista(gestorDeshacer))), 3, 1, 3, 1);
-
-        return grilla;
+    /** Envuelve el contenido con el padding estandar del area central. */
+    private Node envolver(Node contenido) {
+        StackPane pane = new StackPane(contenido);
+        pane.getStyleClass().add("content-pane");
+        StackPane.setAlignment(contenido, javafx.geometry.Pos.TOP_LEFT);
+        return pane;
     }
 
-    /** Crea un tile del dashboard: bloque de color con titulo y subtitulo, clickeable. */
-    private Button tile(String titulo, String subtitulo, String color, Runnable accion) {
-        Label t = new Label(titulo);
-        t.setStyle("-fx-font-size:22; -fx-font-weight:bold; -fx-text-fill:white;");
-        Label s = new Label(subtitulo);
-        s.setStyle("-fx-font-size:13; -fx-text-fill:rgba(255,255,255,0.85);");
-        VBox contenido = new VBox(6, t, s);
-        contenido.setAlignment(Pos.CENTER_LEFT);
-
-        Button tile = new Button();
-        tile.setGraphic(contenido);
-        tile.setAlignment(Pos.BOTTOM_LEFT);
-        tile.setMaxSize(Double.MAX_VALUE, Double.MAX_VALUE);
-        tile.setPadding(new Insets(18));
-        tile.setStyle("-fx-background-color:" + color + "; -fx-background-radius:10; -fx-cursor:hand;");
-        tile.setOnAction(e -> accion.run());
-        GridPane.setHgrow(tile, Priority.ALWAYS);
-        GridPane.setVgrow(tile, Priority.ALWAYS);
-        return tile;
-    }
-
-    /** Contenido temporal para los modulos aun no implementados. */
-    private Node placeholder(String modulo) {
-        Label l = new Label(modulo + " — proximamente");
-        l.setStyle("-fx-font-size:18; -fx-text-fill:#607d8b;");
-        return new StackPane(l);
+    private Node placeholder(String pantalla) {
+        Label l = new Label(pantalla + " — se reconstruira con el nuevo diseño");
+        l.getStyleClass().add("muted");
+        l.setStyle("-fx-font-size:16;");
+        StackPane sp = new StackPane(l);
+        sp.setMinHeight(400);
+        return sp;
     }
 
     public static void main(String[] args) {
