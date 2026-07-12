@@ -181,9 +181,9 @@ public class InicioVista extends VBox {
         HBox izqHead = new HBox(9, h, conteo);
         izqHead.setAlignment(Pos.CENTER_LEFT);
 
-        Label link = new Label("Ver reporte →");
+        Label link = new Label("Ver suscripciones →");
         link.getStyleClass().add("link");
-        link.setOnMouseClicked(e -> navegar.accept("Reportes"));
+        link.setOnMouseClicked(e -> navegar.accept("Suscripciones"));
 
         Region esp = new Region();
         HBox.setHgrow(esp, Priority.ALWAYS);

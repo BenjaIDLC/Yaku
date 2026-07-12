@@ -48,6 +48,7 @@
                 </configuration>
             </plugin>
             <!-- Ejecuta la app de CONSOLA contra la base H2 real con: mvn exec:java -->
+            <!-- Carga datos de demostracion con:            mvn -q compile exec:java@seed -->
             <plugin>
                 <groupId>org.codehaus.mojo</groupId>
                 <artifactId>exec-maven-plugin</artifactId>
@@ -55,6 +56,17 @@
                 <configuration>
                     <mainClass>com.yaku.Main</mainClass>
                 </configuration>
+                <executions>
+                    <execution>
+                        <id>seed</id>
+                        <goals>
+                            <goal>java</goal>
+                        </goals>
+                        <configuration>
+                            <mainClass>com.yaku.SeedDemo</mainClass>
+                        </configuration>
+                    </execution>
+                </executions>
             </plugin>
             <!-- Ejecuta la GUI de JavaFX con: mvn javafx:run -->
             <plugin>

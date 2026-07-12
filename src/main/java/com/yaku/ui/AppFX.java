@@ -109,7 +109,7 @@ public class AppFX extends Application {
         HBox nav = new HBox(3);
         nav.setAlignment(javafx.geometry.Pos.CENTER_LEFT);
         for (String pantalla : new String[]{
-                "Inicio", "Estudiantes", "Suscripciones", "Asistencias", "Reportes", "Historial"}) {
+                "Inicio", "Estudiantes", "Suscripciones", "Asistencias", "Historial"}) {
             Button b = new Button(pantalla);
             b.getStyleClass().add("nav-button");
             b.setOnAction(e -> seleccionar(pantalla));
