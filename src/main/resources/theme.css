@@ -87,7 +87,7 @@
 .content-pane { -fx-padding: 28 30 56 30; }
 
 .h1 {
-    -fx-font-size: 24px;
+    -fx-font-size: 23px;
     -fx-font-weight: 600;
     -fx-text-fill: -color-text;
 }
@@ -158,6 +158,39 @@
 }
 .btn-secondary:hover { -fx-border-color: -color-primary; }
 
+/* Botones "pastilla" pequenos (acciones en fila: Abonar / Cancelar) */
+.btn-sm {
+    -fx-padding: 7 14 7 14;
+    -fx-background-radius: 8;
+    -fx-font-size: 12.5px;
+    -fx-font-weight: 600;
+    -fx-cursor: hand;
+}
+.btn-sm-primary { -fx-background-color: -color-primary; -fx-text-fill: white; }
+.btn-sm-primary:hover { -fx-background-color: -color-primary-d; }
+.btn-sm-secondary {
+    -fx-background-color: -color-card;
+    -fx-text-fill: -color-text-2;
+    -fx-border-color: #cdd8da;
+    -fx-border-radius: 8;
+}
+.btn-sm-secondary:hover { -fx-border-color: -color-primary; -fx-text-fill: -color-primary; }
+.btn-sm:disabled { -fx-opacity: 0.45; -fx-cursor: default; }
+
+/* Tarjetas del catalogo de paquetes */
+.pkg-card {
+    -fx-background-color: -color-card;
+    -fx-border-color: -color-border;
+    -fx-border-radius: 12;
+    -fx-background-radius: 12;
+    -fx-padding: 16 18 16 18;
+    -fx-effect: dropshadow(gaussian, rgba(20,38,44,0.04), 3, 0, 0, 1);
+}
+.pkg-nombre   { -fx-font-size: 14.5px; -fx-font-weight: 600; -fx-text-fill: -color-text; }
+.pkg-detalle  { -fx-font-size: 12.5px; -fx-text-fill: -color-muted; }
+.pkg-precio   { -fx-font-family: "IBM Plex Mono", "Consolas", monospace; -fx-font-weight: 500; -fx-font-size: 17px; -fx-text-fill: -color-primary; }
+.pkg-porclase { -fx-font-size: 11px; -fx-text-fill: -color-muted; }
+
 /* Boton-icono (editar/eliminar en filas) */
 .btn-icon {
     -fx-background-color: -color-card;
@@ -167,15 +200,24 @@
     -fx-text-fill: -color-text-2;
     -fx-min-width: 32; -fx-min-height: 32;
     -fx-max-width: 32; -fx-max-height: 32;
+    -fx-pref-width: 32; -fx-pref-height: 32;
+    -fx-padding: 0;           /* sin padding interno: el glifo no se trunca a "..." */
+    -fx-alignment: center;
     -fx-cursor: hand;
     -fx-font-size: 13px;
 }
 .btn-icon:hover { -fx-border-color: -color-primary; -fx-text-fill: -color-primary; }
+.btn-icon-danger { -fx-text-fill: -color-red; }
 .btn-icon-danger:hover {
     -fx-border-color: -color-red;
     -fx-text-fill: -color-red;
     -fx-background-color: -color-red-bg;
 }
+/* Icono SVG monocromo dentro del boton-icono */
+.ic { -fx-fill: -color-text-2; }
+.btn-icon-danger .ic { -fx-fill: -color-red; }
+.btn-icon:hover .ic { -fx-fill: -color-primary; }
+.btn-icon-danger:hover .ic { -fx-fill: -color-red; }
 
 /* ---- Campos de texto ---- */
 .text-field, .combo-box, .text-field:focused {
@@ -187,6 +229,28 @@
     -fx-padding: 9 12 9 12;
 }
 .text-field:focused { -fx-border-color: -color-accent; }
+
+/* ---- Caja de busqueda (icono de lupa + campo sin borde) ---- */
+.search-box {
+    -fx-background-color: -color-card;
+    -fx-border-color: #cdd8da;
+    -fx-border-radius: 9;
+    -fx-background-radius: 9;
+    -fx-alignment: center-left;
+    -fx-padding: 0 14 0 14;
+    -fx-spacing: 6;
+}
+.search-box:focus-within { -fx-border-color: -color-accent; }
+.search-box .text-field,
+.search-box .text-field:focused {
+    -fx-background-color: transparent;
+    -fx-border-color: transparent;
+    -fx-background-radius: 0;
+    -fx-border-radius: 0;
+    -fx-padding: 11 0 11 0;
+    -fx-font-size: 14px;
+    -fx-prompt-text-fill: -color-muted;
+}
 
 /* ---- Tablas ---- */
 .table-view {
@@ -203,28 +267,183 @@
 .table-view .column-header, .table-view .filler {
     -fx-background-color: transparent;
     -fx-size: 40;
+    -fx-padding: 0;           /* el inset/gap lo ponen los Label de cada header */
     -fx-border-color: transparent transparent #e6ecee transparent;
 }
 .table-view .column-header .label {
+    -fx-alignment: center-left;
+}
+/* Titulo de cabecera (Label propio con padding controlado) */
+.th {
     -fx-text-fill: -color-muted;
     -fx-font-size: 11px;
     -fx-font-weight: 600;
-    -fx-alignment: center-left;
 }
 .table-row-cell {
     -fx-background-color: -color-card;
     -fx-border-color: transparent transparent -color-line transparent;
     -fx-cell-size: 46;
 }
+.table-row-cell:empty {
+    -fx-background-color: transparent;
+    -fx-border-color: transparent;
+}
+.table-row-cell:empty:hover { -fx-background-color: transparent; }
 .table-row-cell:hover { -fx-background-color: #f9fbfb; }
 .table-row-cell:selected { -fx-background-color: #eef6f4; }
 .table-view .table-cell {
     -fx-text-fill: -color-text;
     -fx-font-size: 14px;
     -fx-alignment: center-left;
+    -fx-padding: 0;           /* el inset/gap lo pone cada celda con su Insets */
     -fx-border-color: transparent;
 }
 .table-view:focused { -fx-border-color: -color-border; }
+
+/* ---- Dashboard (Inicio) ---- */
+.dash-card {
+    -fx-background-color: -color-card;
+    -fx-border-color: -color-border;
+    -fx-border-radius: 13;
+    -fx-background-radius: 13;
+    -fx-padding: 18 19 18 19;
+    -fx-effect: dropshadow(gaussian, rgba(20,38,44,0.04), 3, 0, 0, 1);
+}
+.metric-cap  { -fx-font-size: 11.5px; -fx-font-weight: 600; -fx-text-fill: -color-muted; }
+.dash-value  { -fx-font-size: 31px; -fx-font-weight: 600; -fx-text-fill: -color-text; }
+.dash-value-amber { -fx-text-fill: #a8722a; }
+.dash-sub    { -fx-font-size: 12.5px; -fx-text-fill: -color-text-2; }
+
+.list-card {
+    -fx-background-color: -color-card;
+    -fx-border-color: -color-border;
+    -fx-border-radius: 13;
+    -fx-background-radius: 13;
+    -fx-effect: dropshadow(gaussian, rgba(20,38,44,0.04), 3, 0, 0, 1);
+}
+.list-card-head {
+    -fx-padding: 16 20 16 20;
+    -fx-border-color: transparent transparent #eef2f3 transparent;
+    -fx-border-width: 0 0 1 0;
+}
+.list-row {
+    -fx-padding: 12 20 12 20;
+    -fx-border-color: transparent transparent -color-line transparent;
+    -fx-border-width: 0 0 1 0;
+}
+.avatar-sm {
+    -fx-min-width: 30; -fx-min-height: 30; -fx-max-width: 30; -fx-max-height: 30;
+    -fx-background-color: -color-green-bg;
+    -fx-background-radius: 50%;
+    -fx-text-fill: -color-green;
+    -fx-font-size: 11px; -fx-font-weight: 600;
+    -fx-alignment: center;
+}
+.link { -fx-text-fill: -color-primary; -fx-font-size: 13px; -fx-font-weight: 600; -fx-cursor: hand; }
+.dist-bar { -fx-min-height: 13; -fx-pref-height: 13; -fx-max-height: 13; -fx-background-radius: 7; }
+.legend-name  { -fx-font-size: 13px; -fx-text-fill: -color-text-2; }
+.legend-count { -fx-font-size: 13px; -fx-font-weight: 600; -fx-text-fill: -color-text; }
+
+/* ---- Panel/tarjeta con padding (formularios) ---- */
+.panel {
+    -fx-background-color: -color-card;
+    -fx-border-color: -color-border;
+    -fx-border-radius: 13;
+    -fx-background-radius: 13;
+    -fx-padding: 20;
+    -fx-effect: dropshadow(gaussian, rgba(20,38,44,0.04), 3, 0, 0, 1);
+}
+.section-label {
+    -fx-font-size: 12px;
+    -fx-font-weight: 600;
+    -fx-text-fill: -color-muted;
+}
+
+/* ---- Tabla tipo grid (reproduce el display:grid del prototipo) ---- */
+.grid-table {
+    -fx-background-color: -color-card;
+    -fx-border-color: -color-border;
+    -fx-border-radius: 13;
+    -fx-background-radius: 13;
+    -fx-effect: dropshadow(gaussian, rgba(20,38,44,0.05), 4, 0, 0, 1);
+}
+.grid-head {
+    -fx-background-color: #f7f9f9;
+    -fx-background-radius: 13 13 0 0;
+    -fx-padding: 0 22 0 22;            /* inset lateral del grid */
+    -fx-min-height: 44; -fx-pref-height: 44;
+    -fx-border-color: transparent transparent #e6ecee transparent;
+    -fx-border-width: 0 0 1 0;
+}
+.grid-row {
+    -fx-padding: 0 22 0 22;            /* inset lateral del grid */
+    -fx-min-height: 46; -fx-pref-height: 46;
+    -fx-border-color: transparent transparent -color-line transparent;
+    -fx-border-width: 0 0 1 0;
+}
+.grid-row:hover { -fx-background-color: #f9fbfb; }
+/* Barra de titulo opcional sobre la cabecera de columnas */
+.grid-titlebar {
+    -fx-padding: 15 22 15 22;
+    -fx-border-color: transparent transparent #eef2f3 transparent;
+    -fx-border-width: 0 0 1 0;
+}
+.grid-titlebar-count {
+    -fx-font-family: "IBM Plex Mono", "Consolas", monospace;
+    -fx-font-size: 13px;
+    -fx-text-fill: -color-text-2;
+}
+.con-cabecera .grid-head { -fx-background-radius: 0; }
+/* Relleno: dibuja una linea cada 46px hacia abajo (filas aun vacias) */
+.grid-filler {
+    -fx-background-color: linear-gradient(from 0px 0px to 0px 46px, repeat,
+        transparent 0px, transparent 45px, -color-line 45px, -color-line 46px);
+}
+
+/* Texto de celdas y titulos de cabecera */
+.grid-cell { -fx-font-size: 14px; -fx-text-fill: -color-text; }
+.cell-name { -fx-font-weight: 700; }
+.cell-id   { -fx-font-family: "IBM Plex Mono", "Consolas", monospace; -fx-text-fill: -color-text-2; }
+.cell-mono { -fx-font-family: "IBM Plex Mono", "Consolas", monospace; }
+
+/* ---- Historial: tarjetas de la pila de acciones ---- */
+.hist-row {
+    -fx-background-color: -color-card;
+    -fx-border-color: #e6ecee;
+    -fx-border-radius: 12;
+    -fx-background-radius: 12;
+    -fx-padding: 14 18 14 18;
+    -fx-effect: dropshadow(gaussian, rgba(20,38,44,0.05), 3, 0, 0, 1);
+}
+/* Cima (proxima a deshacer): borde verde con acento a la izquierda */
+.hist-row-top {
+    -fx-border-color: #b6e0d7 #b6e0d7 #b6e0d7 #2a9d8f;
+    -fx-border-width: 1 1 1 4;
+}
+.hist-num {
+    -fx-min-width: 30; -fx-min-height: 30;
+    -fx-max-width: 30; -fx-max-height: 30;
+    -fx-background-color: #f2f5f6;
+    -fx-background-radius: 8;
+    -fx-text-fill: -color-text-2;
+    -fx-font-family: "IBM Plex Mono", "Consolas", monospace;
+    -fx-font-weight: 600;
+    -fx-font-size: 13px;
+    -fx-alignment: center;
+}
+.hist-num-top { -fx-background-color: -color-green-bg; -fx-text-fill: -color-green; }
+.hist-desc { -fx-font-size: 14px; -fx-font-weight: 500; -fx-text-fill: -color-text; }
+.hist-meta { -fx-font-size: 12px; -fx-text-fill: -color-muted; }
+.hist-empty {
+    -fx-background-color: -color-card;
+    -fx-border-color: #cdd8da;
+    -fx-border-style: dashed;
+    -fx-border-radius: 13;
+    -fx-background-radius: 13;
+    -fx-padding: 44 20 44 20;
+    -fx-text-fill: -color-muted;
+    -fx-font-size: 14px;
+}
 
 /* ---- Badges de estado ---- */
 .badge {

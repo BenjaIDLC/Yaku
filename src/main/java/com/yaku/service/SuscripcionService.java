@@ -53,6 +53,11 @@ public class SuscripcionService {
         return repositorio.buscarPorEstudiante(estudianteId);
     }
 
+    /** Todas las suscripciones existentes (cualquier estado). */
+    public List<Suscripcion> listarTodas() {
+        return repositorio.listarTodas();
+    }
+
     /** Suscripcion ACTIVA con clases disponibles, o null. */
     public Suscripcion obtenerActiva(String estudianteId) {
         Suscripcion s = repositorio.buscarPorEstudiante(estudianteId);

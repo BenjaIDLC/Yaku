@@ -101,11 +101,13 @@ public class AppFX extends Application {
     private HBox construirHeader() {
         HBox header = new HBox();
         header.getStyleClass().add("header");
+        header.setAlignment(javafx.geometry.Pos.CENTER_LEFT);
 
         Label marca = new Label("Yaku");
         marca.getStyleClass().add("brand");
 
         HBox nav = new HBox(3);
+        nav.setAlignment(javafx.geometry.Pos.CENTER_LEFT);
         for (String pantalla : new String[]{
                 "Inicio", "Estudiantes", "Suscripciones", "Asistencias", "Reportes", "Historial"}) {
             Button b = new Button(pantalla);
@@ -125,7 +127,7 @@ public class AppFX extends Application {
         avatar.getStyleClass().add("avatar");
 
         HBox derecha = new HBox(14, fecha, avatar);
-        derecha.setStyle("-fx-alignment:center-right;");
+        derecha.setAlignment(javafx.geometry.Pos.CENTER_RIGHT);
 
         header.getChildren().addAll(marca, nav, espaciador, derecha);
         return header;
@@ -152,18 +154,34 @@ public class AppFX extends Application {
     /** Devuelve la vista de cada pantalla (placeholder para las aun no rediseñadas). */
     private Node contenidoDe(String pantalla) {
         return switch (pantalla) {
-            case "Estudiantes" -> new EstudiantesVista(estudianteService, gestorDeshacer);
+            case "Inicio" -> new InicioVista(estudianteService, suscripcionService, asistenciaService, this::seleccionar);
+            case "Estudiantes" -> new EstudiantesVista(estudianteService, suscripcionService, gestorDeshacer);
+            case "Suscripciones" -> new SuscripcionesVista(estudianteService, suscripcionService);
+            case "Asistencias" -> new AsistenciasVista(estudianteService, suscripcionService, asistenciaService);
             case "Historial" -> new HistorialVista(gestorDeshacer);
             default -> placeholder(pantalla);
         };
     }
 
-    /** Envuelve el contenido con el padding estandar del area central. */
+    /**
+     * Envuelve el contenido replicando el contenedor del prototipo:
+     * caja de ancho maximo 1340px centrada horizontalmente (margin:0 auto) con
+     * el padding estandar (28 30 56). El StackPane externo ocupa todo el ancho
+     * de la ventana y centra la caja; su alto minimo se ata al viewport para
+     * que el contenido llene la ventana (y las vistas puedan estirarse) aunque
+     * pueda crecer y desplazarse cuando hay mas contenido.
+     */
     private Node envolver(Node contenido) {
-        StackPane pane = new StackPane(contenido);
-        pane.getStyleClass().add("content-pane");
-        StackPane.setAlignment(contenido, javafx.geometry.Pos.TOP_LEFT);
-        return pane;
+        StackPane caja = new StackPane(contenido);
+        caja.getStyleClass().add("content-pane");
+        caja.setMaxWidth(1340);
+        caja.setMaxHeight(Double.MAX_VALUE);
+
+        StackPane exterior = new StackPane(caja);
+        exterior.minHeightProperty().bind(javafx.beans.binding.Bindings.createDoubleBinding(
+                () -> areaContenido.getViewportBounds().getHeight(),
+                areaContenido.viewportBoundsProperty()));
+        return exterior;
     }
 
     private Node placeholder(String pantalla) {
