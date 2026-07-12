@@ -1,5 +1,8 @@
 package com.yaku.estructuras;
 
+import java.util.ArrayList;
+import java.util.List;
+
 /**
  * Pila (LIFO) generica de implementacion propia, respaldada por una lista
  * enlazada simple.
@@ -67,5 +70,20 @@ public class Pila<T> {
 
     public int tamano() {
         return tamano;
+    }
+
+    /**
+     * Devuelve los elementos de la cima hacia el fondo, sin modificar la pila.
+     * Es solo para inspeccion/visualizacion (ej. mostrar el historial); no
+     * altera la semantica LIFO.
+     */
+    public List<T> aLista() {
+        List<T> lista = new ArrayList<>();
+        Nodo n = cima;
+        while (n != null) {
+            lista.add(n.valor);
+            n = n.siguiente;
+        }
+        return lista;
     }
 }

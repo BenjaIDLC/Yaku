@@ -2,6 +2,8 @@ package com.yaku.service;
 
 import com.yaku.estructuras.Pila;
 
+import java.util.List;
+
 /**
  * Historial de acciones reversibles, respaldado por una {@link Pila} de
  * {@link Comando}. La ultima accion registrada es la primera en poder
@@ -22,6 +24,14 @@ public class GestorDeshacer {
     /** @return true si hay al menos una accion que se pueda deshacer. */
     public boolean hayAcciones() {
         return !historial.estaVacia();
+    }
+
+    /**
+     * Acciones en el historial, de la mas reciente (cima, proxima a deshacerse)
+     * a la mas antigua. Solo para mostrar; no modifica la pila.
+     */
+    public List<Comando> acciones() {
+        return historial.aLista();
     }
 
     /**
