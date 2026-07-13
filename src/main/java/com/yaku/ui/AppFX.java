@@ -1,14 +1,11 @@
 package com.yaku.ui;
 
 import com.yaku.db.ConexionDB;
-import com.yaku.repository.AsistenciaRepositoryMemoria;
 import com.yaku.repository.AsistenciaRepositorySQL;
-import com.yaku.repository.EstudianteRepositoryMemoria;
 import com.yaku.repository.EstudianteRepositorySQL;
 import com.yaku.repository.IAsistenciaRepository;
 import com.yaku.repository.IEstudianteRepository;
 import com.yaku.repository.ISuscripcionRepository;
-import com.yaku.repository.SuscripcionRepositoryMemoria;
 import com.yaku.repository.SuscripcionRepositorySQL;
 import com.yaku.service.AsistenciaService;
 import com.yaku.service.EstudianteService;
@@ -16,8 +13,10 @@ import com.yaku.service.GestorDeshacer;
 import com.yaku.service.SuscripcionService;
 
 import javafx.application.Application;
+import javafx.application.Platform;
 import javafx.scene.Node;
 import javafx.scene.Scene;
+import javafx.scene.control.Alert;
 import javafx.scene.control.Button;
 import javafx.scene.control.Label;
 import javafx.scene.control.ScrollPane;
@@ -38,8 +37,8 @@ import java.util.Map;
 /**
  * Punto de entrada de la interfaz grafica (JavaFX).
  *
- * Composition root de la GUI: elige repositorios (H2 o memoria) igual que
- * {@link com.yaku.Main} y arma los mismos servicios, que reutiliza tal cual.
+ * Composition root de la GUI: arma los repositorios H2 igual que
+ * {@link com.yaku.Main} y construye los mismos servicios, que reutiliza tal cual.
  *
  * Navegacion (rediseno): barra superior fija con pestanas; el contenido de la
  * pestana activa se muestra en el area central desplazable. El look & feel vive
@@ -58,7 +57,9 @@ public class AppFX extends Application {
 
     @Override
     public void start(Stage stage) {
-        construirServicios();
+        if (!construirServicios()) {
+            return; // sin base de datos no se puede continuar; ya se aviso al usuario
+        }
 
         raiz.setTop(construirHeader());
         areaContenido.setFitToWidth(true);
@@ -75,25 +76,32 @@ public class AppFX extends Application {
         stage.show();
     }
 
-    /** Elige persistencia H2 o memoria (misma logica que Main) y arma los servicios. */
-    private void construirServicios() {
-        IEstudianteRepository estudianteRepo;
-        ISuscripcionRepository suscripcionRepo;
-        IAsistenciaRepository asistenciaRepo;
+    /**
+     * Conecta a H2 (misma logica que Main) y arma los servicios.
+     * @return true si se conecto y los servicios quedaron listos; false si no se
+     *         pudo conectar (en ese caso ya se mostro el error y la app se cierra).
+     */
+    private boolean construirServicios() {
         try {
             ConexionDB.getInstancia();
-            estudianteRepo = new EstudianteRepositorySQL();
-            suscripcionRepo = new SuscripcionRepositorySQL();
-            asistenciaRepo = new AsistenciaRepositorySQL();
         } catch (SQLException e) {
-            estudianteRepo = new EstudianteRepositoryMemoria();
-            suscripcionRepo = new SuscripcionRepositoryMemoria();
-            asistenciaRepo = new AsistenciaRepositoryMemoria();
+            Alert alerta = new Alert(Alert.AlertType.ERROR,
+                    "No se pudo conectar a la base de datos:\n" + e.getMessage()
+                            + "\n\nVerifica que la carpeta ./data sea accesible y que no haya otra "
+                            + "instancia de Yaku abierta.");
+            alerta.setHeaderText("Error de base de datos");
+            alerta.showAndWait();
+            Platform.exit();
+            return false;
         }
+        IEstudianteRepository estudianteRepo = new EstudianteRepositorySQL();
+        ISuscripcionRepository suscripcionRepo = new SuscripcionRepositorySQL();
+        IAsistenciaRepository asistenciaRepo = new AsistenciaRepositorySQL();
         suscripcionService = new SuscripcionService(suscripcionRepo);
         estudianteService = new EstudianteService(estudianteRepo, suscripcionService);
         asistenciaService = new AsistenciaService(asistenciaRepo, suscripcionService);
         gestorDeshacer = new GestorDeshacer();
+        return true;
     }
 
     // ---- Barra superior ----------------------------------------------------
